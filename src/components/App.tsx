@@ -6,6 +6,7 @@ import { ResumePreview } from './ResumePreview';
 import { EmailTab } from './EmailTab';
 import { AutofillTab } from './AutofillTab';
 import { SettingsPanel } from './SettingsPanel';
+import { ErrorBoundary } from './ErrorBoundary';
 import { Button } from './ui/button';
 import { Textarea, Tabs, TabsList, TabsTrigger, TabsContent, Toast } from './ui/index';
 import { storageService, type AppState, type ChatMessage, type ChatSession } from '@/services/storage-service';
@@ -20,7 +21,7 @@ import {
 
 type View = 'landing' | 'main' | 'settings';
 
-export default function App() {
+function AppContent() {
   const [view, setView] = useState<View>('landing');
   const [activeTab, setActiveTab] = useState('resume');
   const [resumeLatex, setResumeLatex] = useState('');
@@ -307,5 +308,13 @@ export default function App() {
         />
       )}
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppContent />
+    </ErrorBoundary>
   );
 }

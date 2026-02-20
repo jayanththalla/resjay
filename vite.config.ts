@@ -16,14 +16,21 @@ export default defineConfig({
             input: {
                 popup: resolve(__dirname, 'popup.html'),
                 sidepanel: resolve(__dirname, 'sidepanel.html'),
+                background: resolve(__dirname, 'src/background.ts'),
+                autofill: resolve(__dirname, 'src/content-script.ts'),
             },
             output: {
-                entryFileNames: '[name]-[hash].js',
+                entryFileNames: (chunkInfo) => {
+                    const name = chunkInfo.name;
+                    if (name === 'background' || name === 'autofill') {
+                        return '[name].js';
+                    }
+                    return '[name]-[hash].js';
+                },
                 chunkFileNames: 'assets/[name]-[hash].js',
                 assetFileNames: 'assets/[name]-[hash].[ext]',
             },
         },
-        // Chrome extension MV3: no dynamic imports in service workers
         target: 'esnext',
         minify: false,
         sourcemap: true,

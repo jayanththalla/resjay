@@ -18,6 +18,7 @@ export function ResumeUpload({ onUpload, currentFileName }: ResumeUploadProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,6 +37,43 @@ export function ResumeUpload({ onUpload, currentFileName }: ResumeUploadProps) {
         setInfo(result.conversionNote || 'File converted to text successfully.');
       }
 
+      onUpload(result.content, result.fileName);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+
+    setLoading(true);
+    setError('');
+    setInfo('');
+
+    try {
+      const result = await fileService.handleResumeUpload(file);
+      if (result.converted) {
+        setInfo(result.conversionNote || 'File converted successfully.');
+      }
       onUpload(result.content, result.fileName);
     } catch (err: any) {
       setError(err.message);
@@ -108,20 +146,28 @@ export function ResumeUpload({ onUpload, currentFileName }: ResumeUploadProps) {
       {mode === 'file' && (
         <div
           onClick={() => fileInputRef.current?.click()}
-          className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/40 hover:bg-primary/5 transition-all"
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all ${
+            isDragging
+              ? 'border-primary bg-primary/10 scale-105'
+              : 'border-border hover:border-primary/40 hover:bg-primary/5'
+          } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
-          <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+          <Upload className={`w-8 h-8 mx-auto mb-2 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
           <p className="text-sm font-medium mb-1">
-            {loading ? 'Processing...' : 'Drop your resume here'}
+            {loading ? 'Processing...' : isDragging ? 'Drop to upload' : 'Drop your resume here'}
           </p>
           <p className="text-xs text-muted-foreground">
-            Supports <strong>.pdf</strong>, <strong>.docx</strong>, <strong>.doc</strong>, <strong>.txt</strong>, <strong>.tex</strong>
+            or <span className="text-primary font-medium">click</span> to browse. Supports <strong>.pdf</strong>, <strong>.docx</strong>, <strong>.tex</strong>
           </p>
           <input
             ref={fileInputRef}
             type="file"
             accept=".pdf,.docx,.doc,.tex,.txt"
             onChange={handleFileUpload}
+            disabled={loading}
             className="hidden"
           />
         </div>
