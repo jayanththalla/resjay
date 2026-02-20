@@ -16,16 +16,9 @@ export default defineConfig({
             input: {
                 popup: resolve(__dirname, 'popup.html'),
                 sidepanel: resolve(__dirname, 'sidepanel.html'),
-                background: resolve(__dirname, 'src/background.ts'),
-                autofill: resolve(__dirname, 'src/content-script.ts'),
             },
             output: {
-                entryFileNames: (chunkInfo) => {
-                    if (chunkInfo.name === 'background' || chunkInfo.name === 'autofill') {
-                        return '[name].js';
-                    }
-                    return 'assets/[name]-[hash].js';
-                },
+                entryFileNames: '[name]-[hash].js',
                 chunkFileNames: 'assets/[name]-[hash].js',
                 assetFileNames: 'assets/[name]-[hash].[ext]',
             },
