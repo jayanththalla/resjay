@@ -104,7 +104,7 @@ class SyncService {
     try {
       console.log('[v0] Starting sync, queue size:', this.syncQueue.length);
 
-      const results = [];
+      const results: string[] = [];
       for (const record of this.syncQueue) {
         try {
           const success = await this.syncRecord(record);
