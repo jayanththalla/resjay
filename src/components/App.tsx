@@ -5,6 +5,7 @@ import { ResumeUpload } from './ResumeUpload';
 import { ResumePreview } from './ResumePreview';
 import { EmailTab } from './EmailTab';
 import { AutofillTab } from './AutofillTab';
+import { ApplicationsTab } from './ApplicationsTab';
 import { SettingsPanel } from './SettingsPanel';
 import { ErrorBoundary } from './ErrorBoundary';
 import { Button } from './ui/button';
@@ -16,7 +17,7 @@ import { cn, generateId } from '@/lib/utils';
 import {
   MessageSquare, FileText, Mail, Settings, Eye, EyeOff,
   PanelRightOpen, PanelRightClose, ChevronLeft, Sparkles,
-  Loader2, Zap, Menu, X,
+  Loader2, Zap, Menu, X, Briefcase,
 } from 'lucide-react';
 
 type View = 'landing' | 'main' | 'settings';
@@ -208,6 +209,9 @@ function AppContent() {
             <TabsTrigger value="email">
               <Mail className="w-3.5 h-3.5 mr-1" /> Email
             </TabsTrigger>
+            <TabsTrigger value="applications">
+              <Briefcase className="w-3.5 h-3.5 mr-1" /> Applications
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -284,6 +288,14 @@ function AppContent() {
             <AutofillTab
               resumeContent={resumeLatex}
               jobDescription={jobDescription}
+            />
+          )}
+
+          {activeTab === 'applications' && (
+            <ApplicationsTab
+              onApplicationTracked={() => {
+                setToast({ message: 'Application tracked successfully!', type: 'success' });
+              }}
             />
           )}
         </div>
