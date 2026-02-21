@@ -7,7 +7,7 @@ import { aiService } from '@/services/ai-service';
 import { UserProfileForm } from './UserProfileForm';
 import {
   Key, Github, Linkedin, FileText, Save, Loader2, CheckCircle2,
-  RefreshCw, Trash2, Moon, Sun, Database, Settings2,
+  RefreshCw, Trash2, Moon, Sun, Database, Settings2, Download, Upload, AlertCircle,
 } from 'lucide-react';
 
 interface SettingsPanelProps {
@@ -100,6 +100,52 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
     if (confirm('Clear all stored data? This cannot be undone.')) {
       await storageService.clearAll();
       window.location.reload();
+    }
+  };
+
+  const handleExportData = async () => {
+    setLoading('export');
+    try {
+      const settings = await storageService.getSettings();
+      const kb = await storageService.getKnowledgeBase();
+      const history = await storageService.getResumeHistory();
+
+      const exportData = {
+        version: '1.0',
+        exportDate: new Date().toISOString(),
+        settings: {
+          aiProvider: settings.aiProvider,
+          multiAgentMode: settings.multiAgentMode,
+          deepAnalysis: settings.deepAnalysis,
+          theme: settings.theme,
+        },
+        knowledgeBase: {
+          manualText: kb.manualText,
+          repoCount: kb.githubRepos?.length || 0,
+        },
+        resumeHistory: {
+          count: history.length,
+          lastTailored: history[history.length - 1]?.createdAt || null,
+        },
+      };
+
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `resumeforge-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.error('Export failed:', err);
+    } finally {
+      setLoading(null);
     }
   };
 
@@ -325,6 +371,30 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         <Card className="glassmorphism-card">
           <CardContent className="pt-5">
             <UserProfileForm />
+          </CardContent>
+        </Card>
+
+        {/* Data Management */}
+        <Card className="glass-card border-amber-500/20 bg-amber-500/5">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+              <p className="text-[10px] text-muted-foreground">Export your data to backup settings and usage statistics.</p>
+            </div>
+            <Button 
+              onClick={handleExportData} 
+              disabled={loading === 'export'} 
+              variant="outline"
+              size="sm"
+              className="w-full text-xs"
+            >
+              {loading === 'export' ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <Download className="w-3 h-3" />
+              )}
+              {loading === 'export' ? 'Exporting...' : 'Export Backup'}
+            </Button>
           </CardContent>
         </Card>
 

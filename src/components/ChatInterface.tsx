@@ -3,7 +3,7 @@ import { Button } from './ui/button';
 import { Textarea } from './ui/index';
 import { aiService } from '@/services/ai-service';
 import { cn, generateId } from '@/lib/utils';
-import { Send, Sparkles, User, Bot, Loader2, StopCircle } from 'lucide-react';
+import { Send, Sparkles, User, Bot, Loader2, StopCircle, Copy, Check } from 'lucide-react';
 import type { ChatMessage } from '@/services/storage-service';
 
 interface ChatInterfaceProps {
@@ -246,6 +246,17 @@ function MessageBubble({
   isStreaming?: boolean;
 }) {
   const isUser = message.role === 'user';
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(message.content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('[v0] Failed to copy:', err);
+    }
+  };
 
   // Parse content for code blocks
   const renderContent = (content: string) => {
@@ -275,7 +286,7 @@ function MessageBubble({
   return (
     <div
       className={cn(
-        'flex items-start gap-2.5 message-enter',
+        'flex items-start gap-2.5 message-enter group',
         isUser && 'flex-row-reverse'
       )}
     >
@@ -289,7 +300,7 @@ function MessageBubble({
       </div>
       <div
         className={cn(
-          'max-w-[85%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed',
+          'max-w-[85%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed relative',
           isUser
             ? 'bg-primary text-primary-foreground rounded-tr-sm'
             : 'bg-muted rounded-tl-sm'
@@ -298,6 +309,21 @@ function MessageBubble({
         {renderContent(message.content)}
         {isStreaming && (
           <span className="inline-block w-1.5 h-4 bg-primary/60 ml-0.5 animate-pulse rounded-sm" />
+        )}
+        
+        {/* Copy button for assistant messages */}
+        {!isUser && !isStreaming && (
+          <button
+            onClick={handleCopy}
+            className="absolute -right-8 top-0.5 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted"
+            title="Copy to clipboard"
+          >
+            {copied ? (
+              <Check className="w-3.5 h-3.5 text-green-500" />
+            ) : (
+              <Copy className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" />
+            )}
+          </button>
         )}
       </div>
     </div>

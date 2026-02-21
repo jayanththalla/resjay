@@ -21,16 +21,16 @@ export default defineConfig({
             },
             output: {
                 entryFileNames: (chunkInfo) => {
-                    if (chunkInfo.name === 'background' || chunkInfo.name === 'autofill') {
+                    const name = chunkInfo.name;
+                    if (name === 'background' || name === 'autofill') {
                         return '[name].js';
                     }
-                    return 'assets/[name]-[hash].js';
+                    return '[name]-[hash].js';
                 },
                 chunkFileNames: 'assets/[name]-[hash].js',
                 assetFileNames: 'assets/[name]-[hash].[ext]',
             },
         },
-        // Chrome extension MV3: no dynamic imports in service workers
         target: 'esnext',
         minify: false,
         sourcemap: true,
