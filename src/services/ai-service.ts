@@ -40,27 +40,38 @@ class AIService {
     private provider: 'gemini' | 'groq' = 'gemini';
     private geminiModelName = 'gemini-2.0-flash';
     private groqModelName = 'llama-3.3-70b-versatile';
+    private initializing: Promise<void> | null = null;
 
     async init(): Promise<void> {
-        const settings = await storageService.getSettings();
-        this.provider = settings.aiProvider || 'gemini';
+        if (this.initializing) return this.initializing;
 
-        if (this.provider === 'gemini') {
-            this.apiKey = settings.geminiApiKey;
-            if (this.apiKey) {
-                const genAI = new GoogleGenerativeAI(this.apiKey);
-                this.model = genAI.getGenerativeModel({ model: this.geminiModelName });
+        this.initializing = (async () => {
+            const settings = await storageService.getSettings();
+            this.provider = settings.aiProvider || 'gemini';
+
+            if (this.provider === 'gemini') {
+                this.apiKey = settings.geminiApiKey;
+                if (this.apiKey) {
+                    const genAI = new GoogleGenerativeAI(this.apiKey);
+                    this.model = genAI.getGenerativeModel({ model: this.geminiModelName });
+                } else {
+                    this.model = null;
+                }
+            } else {
+                this.apiKey = settings.groqApiKey;
+                if (this.apiKey) {
+                    this.groq = new Groq({ apiKey: this.apiKey, dangerouslyAllowBrowser: true });
+                } else {
+                    this.groq = null;
+                }
             }
-        } else {
-            this.apiKey = settings.groqApiKey;
-            if (this.apiKey) {
-                this.groq = new Groq({ apiKey: this.apiKey, dangerouslyAllowBrowser: true });
-            }
-        }
+        })();
+
+        return this.initializing;
     }
 
     async setApiKey(key: string): Promise<void> {
-        // Re-initialize based on stored settings (which are updated by SettingsPanel before calling this)
+        this.initializing = null; // Force re-init
         await this.init();
     }
 
@@ -347,8 +358,9 @@ class AIService {
 
     constructor() {
         try {
-            // content scripts don't have chrome.tabs
-            this.isBackground = !!(typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create);
+            // Service workers in MV3 do not have a 'window' object.
+            // Content scripts and sidepanels/popups do.
+            this.isBackground = typeof window === 'undefined';
         } catch {
             this.isBackground = false;
         }

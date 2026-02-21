@@ -61,6 +61,8 @@ export function LandingPage({ onComplete }: LandingPageProps) {
     setError('');
 
     try {
+      // Save settings first so aiService.init() can read them
+      await storageService.saveSettings({ geminiApiKey: apiKey.trim(), aiProvider: 'gemini' });
       await aiService.setApiKey(apiKey.trim());
       await storageService.saveAppState({ isOnboarded: true });
       onComplete();

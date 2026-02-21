@@ -55,6 +55,7 @@ function AppContent() {
   }, []);
 
   const handleOnboardingComplete = async () => {
+    await aiService.init(); // Initialize AI as soon as onboarded
     setView('main');
     const kbText = await knowledgeBaseService.buildKnowledgeBaseText();
     setKnowledgeBase(kbText);

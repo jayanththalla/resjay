@@ -1,4 +1,8 @@
 // ResumeForge AI – Background Service Worker (Manifest V3)
+import { aiService } from './services/ai-service';
+
+// Initialize AI service on startup
+aiService.init();
 
 chrome.runtime.onInstalled.addListener(() => {
     // Enable side panel on action click
@@ -161,7 +165,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 });
 
-import { aiService } from './services/ai-service';
+// Sync settings changes to re-initialize AI service
+chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.settings) {
+        console.log('[ResumeForge] Settings changed, re-initializing AI service');
+        aiService.init();
+    }
+});
+
+
 
 async function handleGeminiRequest(payload: {
     prompt: string;
